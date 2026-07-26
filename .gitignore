@@ -1,0 +1,36 @@
+# Runtime account state and secrets
+data/
+runtime/
+vault/
+transactions/
+recovery/
+logs/
+*.log
+**/auth.json
+**/*auth*.json
+**/*.dpapi
+**/*.secret
+
+# Build and test output
+artifacts/
+bin/
+obj/
+TestResults/
+coverage/
+*.exe
+*.dll
+*.pdb
+*.cache
+
+# Local tooling and IDE state
+.tools/
+.nuget/
+packages/
+.vs/
+.idea/
+*.user
+*.suo
+
+# Windows metadata
+Thumbs.db
+Desktop.ini
