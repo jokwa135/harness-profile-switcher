@@ -4,6 +4,8 @@ Harness Profile Switcher is a private Windows desktop utility for switching Chat
 
 It keeps Codex projects, conversation history, configuration, skills, and plugins in the shared default `.codex` home. Only `auth.json` and the complete ChatGPT Chromium browser state are switched per profile.
 
+Contributor acknowledgments are recorded in [CONTRIBUTORS.md](CONTRIBUTORS.md).
+
 ## Validation status
 
 Version `1.0.0-local` has passed the automated recovery, security, process-control, state-inspection, and non-live end-to-end tests included in this repository. Live first-account registration and profile switching have also been confirmed on this PC. The installed ChatGPT package boundary is checked independently because Store updates can change it.
