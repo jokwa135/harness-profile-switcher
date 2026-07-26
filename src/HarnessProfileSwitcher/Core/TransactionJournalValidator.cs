@@ -64,6 +64,19 @@ namespace HarnessProfileSwitcher.Core
             TransactionPhases.PreviousAuthActivateIntent,
             TransactionPhases.PreviousAuthActivated);
 
+        private static readonly ISet<string> ProfileDeletionPhases = new HashSet<string>(StringComparer.Ordinal)
+        {
+            TransactionPhases.Prepared,
+            TransactionPhases.ProfileDeleteLinkIntent,
+            TransactionPhases.ProfileDeleteLinkDeleted,
+            TransactionPhases.ProfileDeleteStageIntent,
+            TransactionPhases.ProfileDeleteStaged,
+            TransactionPhases.ProfileDeleteContentIntent,
+            TransactionPhases.ProfileDeleteContentDeleted,
+            TransactionPhases.Completed,
+            TransactionPhases.RecoveryRequired
+        };
+
         public static void ValidateForInspection(EnginePaths paths, TransactionJournal journal, string expectedTransactionId)
         {
             ValidateAny(paths, journal, null, expectedTransactionId);
@@ -79,6 +92,11 @@ namespace HarnessProfileSwitcher.Core
             if (string.Equals(journal.Operation, "switch", StringComparison.Ordinal))
             {
                 ValidateSwitch(paths, journal, expectedPackageFamily, expectedTransactionId);
+                return;
+            }
+            if (string.Equals(journal.Operation, ProfileDeletionEngine.DeleteProfileOperation, StringComparison.Ordinal))
+            {
+                ValidateProfileDeletion(paths, journal, expectedPackageFamily, expectedTransactionId);
                 return;
             }
             ValidateLifecycle(paths, journal, expectedPackageFamily, expectedTransactionId);
@@ -182,6 +200,39 @@ namespace HarnessProfileSwitcher.Core
             {
                 RequireFingerprint(journal.SourceAuthSha256, journal.SourceAuthLength, "candidate authentication");
             }
+            RequireDirectoryFingerprint(journal);
+        }
+
+        public static void ValidateProfileDeletion(
+            EnginePaths paths,
+            TransactionJournal journal,
+            string expectedPackageFamily,
+            string expectedTransactionId)
+        {
+            ValidateCommon(
+                paths,
+                journal,
+                expectedPackageFamily,
+                expectedTransactionId,
+                ProfileDeletionEngine.DeleteProfileOperation,
+                ProfileDeletionPhases);
+
+            string source = NormalizeProfileId(journal.SourceProfileId, "active source profile");
+            string target = NormalizeProfileId(journal.TargetProfileId, "deleted target profile");
+            if (string.Equals(source, target, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidDataException("Profile deletion journal names the active profile as its target.");
+            }
+
+            RequireEmpty(journal.PreviousProfileId, "profile deletion previous profile");
+            RequireEmpty(journal.CandidateProfileId, "profile deletion candidate profile");
+            RequireDisplayName(journal.TargetDisplayName);
+            RequirePath(journal.TargetAuthPath, paths.ProfileAuthPath(target), "deleted profile authentication");
+            RequirePath(journal.TargetInactiveLinkPath, paths.InactiveLinkPath(target), "deleted profile inactive junction");
+            RequirePath(journal.SourceBrowserPath, paths.ProfileBrowserPath(source), "active profile browser slot");
+            RequirePath(journal.TargetBrowserPath, paths.ProfileBrowserPath(target), "deleted profile browser slot");
+            RequirePath(journal.CandidateProfilePath, paths.ProfileDirectory(target), "deleted profile directory");
+            RequirePath(journal.DeletionStagingPath, paths.ProfileDeletionStagingPath(journal.TransactionId), "profile deletion staging directory");
             RequireDirectoryFingerprint(journal);
         }
 

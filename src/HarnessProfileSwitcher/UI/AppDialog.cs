@@ -193,6 +193,17 @@ namespace HarnessProfileSwitcher.UI
 
         internal static AppDialog CreatePreview(string mode)
         {
+            if (string.Equals(mode, "dialog-delete", StringComparison.OrdinalIgnoreCase))
+            {
+                return new AppDialog(
+                    "Delete Studio?",
+                    "This permanently removes the saved sign-in and browser session for this profile. Adding it again will require OAuth.",
+                    "The active ChatGPT account stays open. Local Codex work is stored separately from this profile.",
+                    "Delete profile",
+                    "Cancel",
+                    AppDialogTone.Warning,
+                    true);
+            }
             if (string.Equals(mode, "dialog-force", StringComparison.OrdinalIgnoreCase))
             {
                 return new AppDialog(

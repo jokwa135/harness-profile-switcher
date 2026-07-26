@@ -143,6 +143,40 @@ namespace HarnessProfileSwitcher.Application
                 engine.MarkLaunchObserved);
         }
 
+        public void DeleteProfile(OperationContext context, string targetProfileId)
+        {
+            ProfileDeletionEngine engine = CreateProfileDeletionEngine(context);
+            ExecuteWithoutRelaunch(
+                context,
+                DiagnosticOperations.DeleteProfile,
+                delegate { return engine.DeleteProfile(targetProfileId).TransactionId; });
+        }
+
+        public void RecoverProfileDeletion(OperationContext context)
+        {
+            ProfileDeletionEngine engine = CreateProfileDeletionEngine(context);
+            RequireContext(context);
+            string packageVersion = context.Installation.PackageVersion;
+            string transactionId = null;
+            diagnostics.OperationStarted(DiagnosticOperations.Recover, packageVersion);
+            try
+            {
+                ProfileDeletionRecoveryResult recovery = engine.RecoverPending();
+                transactionId = recovery.TransactionId;
+                if (string.Equals(recovery.Result, "NoPendingTransaction", StringComparison.Ordinal))
+                {
+                    diagnostics.OperationNoop(DiagnosticOperations.Recover, packageVersion);
+                    return;
+                }
+            }
+            catch (Exception exception)
+            {
+                TryLogFailure(DiagnosticOperations.Recover, packageVersion, transactionId, exception);
+                throw;
+            }
+            WriteCompletionOrThrow(DiagnosticOperations.Recover, packageVersion, transactionId);
+        }
+
         public void RecoverAndRelaunch(OperationContext context, PendingTransactionSummary pending)
         {
             if (pending == null) throw new ArgumentNullException("pending");
@@ -225,6 +259,20 @@ namespace HarnessProfileSwitcher.Application
                 runtimeSecurity);
         }
 
+        private ProfileDeletionEngine CreateProfileDeletionEngine(OperationContext context)
+        {
+            RequireContext(context);
+            return new ProfileDeletionEngine(
+                paths,
+                store,
+                new VerifiedDirectoryMover(),
+                junctions,
+                new NoFaultInjector(),
+                context.Installation.PackageFamily,
+                context.Installation.PackageVersion,
+                runtimeSecurity);
+        }
+
         private void ExecuteAndRelaunch(
             OperationContext context,
             string operation,
@@ -242,6 +290,28 @@ namespace HarnessProfileSwitcher.Application
                 transactionId = mutate();
                 context.Launcher.LaunchAndWait(TimeSpan.FromSeconds(30));
                 markLaunchObserved(transactionId);
+            }
+            catch (Exception exception)
+            {
+                TryLogFailure(operation, packageVersion, transactionId, exception);
+                throw;
+            }
+            WriteCompletionOrThrow(operation, packageVersion, transactionId);
+        }
+
+        private void ExecuteWithoutRelaunch(
+            OperationContext context,
+            string operation,
+            Func<string> mutate)
+        {
+            RequireContext(context);
+            if (mutate == null) throw new ArgumentNullException("mutate");
+            string packageVersion = context.Installation.PackageVersion;
+            string transactionId = null;
+            diagnostics.OperationStarted(operation, packageVersion);
+            try
+            {
+                transactionId = mutate();
             }
             catch (Exception exception)
             {

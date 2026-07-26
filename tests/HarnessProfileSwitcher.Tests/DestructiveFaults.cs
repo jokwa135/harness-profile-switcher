@@ -80,6 +80,11 @@ namespace HarnessProfileSwitcher.Tests
                 throw new PostEffectFaultException("Injected failure after verified directory move " + moveCount + ".");
             }
         }
+
+        public void DeleteDirectory(string path)
+        {
+            inner.DeleteDirectory(path);
+        }
     }
 
     internal sealed class ThrowAfterJunctionMutation : IJunctionManager
@@ -115,6 +120,12 @@ namespace HarnessProfileSwitcher.Tests
         public void Move(string sourcePath, string destinationPath)
         {
             inner.Move(sourcePath, destinationPath);
+            AfterMutation();
+        }
+
+        public void Delete(string path)
+        {
+            inner.Delete(path);
             AfterMutation();
         }
 

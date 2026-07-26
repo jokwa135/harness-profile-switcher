@@ -14,6 +14,7 @@ namespace HarnessProfileSwitcher.Core
         public const string FinalizeOnboarding = "finalize_onboarding";
         public const string CancelOnboarding = "cancel_onboarding";
         public const string Switch = "switch";
+        public const string DeleteProfile = "delete_profile";
         public const string Recover = "recover";
 
         internal static readonly ISet<string> Allowed = new HashSet<string>(StringComparer.Ordinal)
@@ -23,6 +24,7 @@ namespace HarnessProfileSwitcher.Core
             FinalizeOnboarding,
             CancelOnboarding,
             Switch,
+            DeleteProfile,
             Recover
         };
     }

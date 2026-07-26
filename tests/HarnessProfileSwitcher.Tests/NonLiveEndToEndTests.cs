@@ -21,7 +21,7 @@ namespace HarnessProfileSwitcher.Tests
                 ExecuteJourney(root, deletionRoot);
                 Archive(root);
                 succeeded = true;
-                Console.WriteLine("PASS: isolated non-live journey completed registration, onboarding, rotation-aware switching, cancellation preservation, interruption recovery, ACL checks, and shared-state invariants");
+                Console.WriteLine("PASS: isolated non-live journey completed registration, onboarding, rotation-aware switching, cancellation preservation, interruption recovery, permanent inactive-profile deletion, ACL checks, and shared-state invariants");
                 return 0;
             }
             catch (Exception exception)
@@ -138,6 +138,19 @@ namespace HarnessProfileSwitcher.Tests
             AssertHealthy(security.AuditDirectory(paths.ProfileBrowserPath(alpha)), "Active Alpha browser ACL is unhealthy.");
             AssertHealthy(security.AuditFile(paths.ProfileAuthPath(beta)), "Inactive Beta authentication ACL is unhealthy.");
             AssertShared(sharedFiles);
+
+            ProfileDeletionEngine deletion = CreateDeletion(paths, store, junctions, security, new NoFaultInjector());
+            ProfileDeletionResult deleted = deletion.DeleteProfile(beta);
+            AssertEqual(beta, deleted.DeletedProfileId, "Non-live deletion returned the wrong profile.");
+            Assert(!Directory.Exists(paths.ProfileDirectory(beta)), "Deleted Beta profile directory remains.");
+            Assert(!junctions.Exists(paths.InactiveLinkPath(beta)), "Deleted Beta inactive junction remains.");
+            AssertActive(paths, store, junctions, alpha, "alpha-auth-v1");
+            ApplicationStateSnapshot afterDeletion = inspector.Inspect();
+            AssertMode(HarnessMode.Active, afterDeletion, "Profile deletion did not return to active mode.");
+            Assert(afterDeletion.Profiles.Count == 1 && afterDeletion.Profiles[0].ProfileId == alpha,
+                "Deleted Beta profile remained visible after deletion.");
+            AssertHealthy(security.AuditFile(paths.JournalPath(deleted.TransactionId)), "Deletion journal ACL is unhealthy.");
+            AssertShared(sharedFiles);
         }
 
         private static Dictionary<string, string> CreateUnmanagedState(EnginePaths paths, string codexHome)
@@ -190,6 +203,24 @@ namespace HarnessProfileSwitcher.Tests
                 new VerifiedFileMover(),
                 junctions,
                 new AlwaysStoppedGuard(),
+                faultInjector,
+                PackageFamily,
+                PackageVersion,
+                security);
+        }
+
+        private static ProfileDeletionEngine CreateDeletion(
+            EnginePaths paths,
+            AtomicJsonStore store,
+            IJunctionManager junctions,
+            IRuntimeSecurity security,
+            IFaultInjector faultInjector)
+        {
+            return new ProfileDeletionEngine(
+                paths,
+                store,
+                new VerifiedDirectoryMover(),
+                junctions,
                 faultInjector,
                 PackageFamily,
                 PackageVersion,

@@ -32,9 +32,10 @@ namespace HarnessProfileSwitcher.Tests
                 TestSwitchSecurityIntegration();
                 int processControlTestCount = ProcessControlTests.Run();
                 int lifecycleTestCount = LifecycleFixtureTests.Run();
+                int profileDeletionTestCount = ProfileDeletionFixtureTests.Run();
                 int stateInspectorTestCount = ApplicationStateFixtureTests.Run();
                 int runtimeSecurityTestCount = RuntimeSecurityTests.Run();
-                Console.WriteLine("PASS: " + (12 + processControlTestCount + lifecycleTestCount + stateInspectorTestCount + runtimeSecurityTestCount) + " fixture suites, including checkpoint and post-effect recovery, journal tamper rejection, artifact preservation, package-scoped process control, UI state derivation, ACL hardening, and closed-schema diagnostics");
+                Console.WriteLine("PASS: " + (12 + processControlTestCount + lifecycleTestCount + profileDeletionTestCount + stateInspectorTestCount + runtimeSecurityTestCount) + " fixture suites, including checkpoint and post-effect recovery, journal tamper rejection, permanent inactive-profile deletion, shared-state preservation, package-scoped process control, UI state derivation, ACL hardening, and closed-schema diagnostics");
                 return 0;
             }
             catch (Exception exception)

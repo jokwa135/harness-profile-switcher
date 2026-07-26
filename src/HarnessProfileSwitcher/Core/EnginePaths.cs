@@ -92,6 +92,11 @@ namespace HarnessProfileSwitcher.Core
             return Path.Combine(TransactionDirectory(transactionId), "journal.json");
         }
 
+        public string ProfileDeletionStagingPath(string transactionId)
+        {
+            return Path.Combine(TransactionDirectory(transactionId), "profile-delete-staging");
+        }
+
         public string StagingAuthPath(string transactionId)
         {
             return Path.Combine(AuthStagingRoot, NormalizeTransactionId(transactionId), "incoming-auth.json");

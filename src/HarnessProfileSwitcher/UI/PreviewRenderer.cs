@@ -40,7 +40,8 @@ namespace HarnessProfileSwitcher.UI
         {
             if (string.Equals(mode, "dialog-register", StringComparison.OrdinalIgnoreCase) ||
                 string.Equals(mode, "dialog-force", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(mode, "dialog-error", StringComparison.OrdinalIgnoreCase))
+                string.Equals(mode, "dialog-error", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(mode, "dialog-delete", StringComparison.OrdinalIgnoreCase))
             {
                 return AppDialog.CreatePreview(mode);
             }
@@ -62,8 +63,8 @@ namespace HarnessProfileSwitcher.UI
             List<ProfileSummary> profiles = new List<ProfileSummary>
             {
                 new ProfileSummary { ProfileId = primaryId, DisplayName = "Personal", Status = "Active", IsActive = true },
-                new ProfileSummary { ProfileId = studioId, DisplayName = "Studio", Status = "Ready", CanSwitch = true },
-                new ProfileSummary { ProfileId = clientId, DisplayName = "Client workspace", Status = "Ready", CanSwitch = true }
+                new ProfileSummary { ProfileId = studioId, DisplayName = "Studio", Status = "Ready", CanSwitch = true, CanDelete = true },
+                new ProfileSummary { ProfileId = clientId, DisplayName = "Client workspace", Status = "Ready", CanSwitch = true, CanDelete = true }
             };
             ApplicationStateSnapshot state;
             if (string.Equals(mode, "pending", StringComparison.OrdinalIgnoreCase))

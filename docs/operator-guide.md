@@ -2,7 +2,7 @@
 
 ## Before first use
 
-This is a private, unsigned local build for the current Windows PC. Version `1.0.0-local` has passed the repository's automated validation, and live first-account registration and profile switching have been confirmed on this PC.
+This is a private, unsigned local build for the current Windows PC. Version `1.1.0-local` has passed the repository's automated validation, and live first-account registration and profile switching have been confirmed on this PC.
 
 The supported environment is:
 
@@ -61,6 +61,17 @@ If the sign-in should not be kept, select **Cancel setup**. The prior account is
 
 If ChatGPT does not close gracefully, the utility asks before force-closing only processes verified inside the installed OpenAI Codex package directory. Unrelated Codex terminals are not selected.
 
+## Delete a saved profile
+
+1. Confirm that the profile to remove is inactive and marked **Ready to switch**.
+2. Select **Delete** on that profile.
+3. Review the permanent-deletion warning and select **Delete profile**.
+4. Confirm that the profile disappears while the active ChatGPT account remains open.
+
+Deletion removes only the selected profile's saved authentication, browser session, local label, and inactive junction. It does not move those items to `D:\fordeletion`, and adding the account again requires OAuth. Shared Codex projects, local history, configuration, skills, and plugins are outside the profile directory and remain unchanged.
+
+The active profile cannot be deleted. Switch to another registered profile first. Deletion is also unavailable during onboarding, recovery, or when the inactive profile is structurally incomplete.
+
 ## Interrupted operation and recovery
 
 If a transaction was interrupted, normal profile actions are disabled and the application displays **Recover safely**.
@@ -117,4 +128,4 @@ The package family is checked on every operation. If compatibility validation st
 
 There is no installer. The portable executable and package archive can be moved to `D:\fordeletion` when no longer needed.
 
-Do not remove `D:\AI\Data\HarnessProfileSwitcher` or the live browser junction merely to uninstall the executable. Once the first profile is registered, ChatGPT depends on the managed browser target under D:. Full decommissioning requires a deliberate restore operation and is not automated in version `1.0.0-local`.
+Do not remove `D:\AI\Data\HarnessProfileSwitcher` or the live browser junction merely to uninstall the executable. Once the first profile is registered, ChatGPT depends on the managed browser target under D:. Full decommissioning requires a deliberate restore operation and is not automated in version `1.1.0-local`.

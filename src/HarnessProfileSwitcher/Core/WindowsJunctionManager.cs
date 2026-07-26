@@ -14,6 +14,7 @@ namespace HarnessProfileSwitcher.Core
         string ResolveTarget(string path);
         void Create(string junctionPath, string targetPath);
         void Move(string sourcePath, string destinationPath);
+        void Delete(string path);
     }
 
     public sealed class WindowsJunctionManager : IJunctionManager
@@ -143,6 +144,25 @@ namespace HarnessProfileSwitcher.Core
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath));
             Directory.Move(sourcePath, destinationPath);
             VerifyTarget(destinationPath, expectedTarget);
+        }
+
+        public void Delete(string path)
+        {
+            path = Path.GetFullPath(path);
+            if (!Exists(path))
+            {
+                if (File.Exists(path) || Directory.Exists(path))
+                {
+                    throw new IOException("Expected junction path contains a non-junction entry: " + path);
+                }
+                return;
+            }
+
+            Directory.Delete(path, false);
+            if (Exists(path) || File.Exists(path) || Directory.Exists(path))
+            {
+                throw new IOException("Junction deletion left the path in place: " + path);
+            }
         }
 
         private void VerifyTarget(string junctionPath, string expectedTarget)

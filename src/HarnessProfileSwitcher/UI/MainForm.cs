@@ -556,7 +556,7 @@ namespace HarnessProfileSwitcher.UI
             };
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 56));
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 190));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 248));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 58));
             layout.RowStyles.Add(new RowStyle(SizeType.Percent, 42));
             Avatar avatar = new Avatar
@@ -593,18 +593,43 @@ namespace HarnessProfileSwitcher.UI
             layout.Controls.Add(detail, 1, 1);
             if (profile.CanSwitch && allowSwitching)
             {
+                FlowLayoutPanel actions = new FlowLayoutPanel
+                {
+                    Dock = DockStyle.Fill,
+                    FlowDirection = FlowDirection.RightToLeft,
+                    WrapContents = false,
+                    BackColor = Color.Transparent,
+                    Padding = new Padding(0, 6, 0, 6),
+                    Margin = Padding.Empty
+                };
                 ActionButton switchButton = new ActionButton
                 {
                     Text = "Switch",
                     Kind = ActionButtonKind.Secondary,
                     Glyph = ButtonGlyph.Switch,
-                    Dock = DockStyle.Fill,
-                    Margin = new Padding(14, 6, 0, 6),
+                    Size = new Size(118, 42),
+                    Margin = Padding.Empty,
                     AccessibleName = "Switch to " + profile.DisplayName
                 };
                 switchButton.Click += async delegate { await SwitchAsync(profile); };
-                layout.Controls.Add(switchButton, 2, 0);
-                layout.SetRowSpan(switchButton, 2);
+                actions.Controls.Add(switchButton);
+
+                if (profile.CanDelete)
+                {
+                    ActionButton deleteButton = new ActionButton
+                    {
+                        Text = "Delete",
+                        Kind = ActionButtonKind.DangerGhost,
+                        Glyph = ButtonGlyph.Delete,
+                        Size = new Size(106, 42),
+                        Margin = new Padding(8, 0, 0, 0),
+                        AccessibleName = "Delete " + profile.DisplayName
+                    };
+                    deleteButton.Click += async delegate { await DeleteProfileAsync(profile); };
+                    actions.Controls.Add(deleteButton);
+                }
+                layout.Controls.Add(actions, 2, 0);
+                layout.SetRowSpan(actions, 2);
             }
             else
             {
@@ -701,19 +726,58 @@ namespace HarnessProfileSwitcher.UI
             });
         }
 
+        private async Task DeleteProfileAsync(ProfileSummary profile)
+        {
+            if (AppDialog.Show(
+                this,
+                "Delete " + profile.DisplayName + "?",
+                "This permanently removes the saved sign-in and browser session for this profile. Adding it again will require OAuth.",
+                "Delete profile",
+                "Cancel",
+                AppDialogTone.Warning,
+                "The active ChatGPT account stays open. Local Codex work is stored separately from this profile.",
+                true) != DialogResult.OK) return;
+            await RunInPlaceMutationAsync(
+                "Deleting " + profile.DisplayName,
+                profile.DisplayName + " was deleted; ChatGPT stayed open",
+                delegate(OperationContext context)
+                {
+                    services.DeleteProfile(context, profile.ProfileId);
+                });
+        }
+
         private async Task RecoverAsync()
         {
             PendingTransactionSummary pending = inspection == null ? null : inspection.State.PendingTransaction;
             if (pending == null) return;
+            bool deletingProfile = string.Equals(
+                pending.Operation,
+                ProfileDeletionEngine.DeleteProfileOperation,
+                StringComparison.Ordinal);
             if (AppDialog.Show(
                 this,
-                "Recover the last account operation?",
-                "The switcher will use its saved journal to safely finish or reverse the interrupted " + FriendlyOperation(pending.Operation) + ".",
-                "Recover safely",
+                deletingProfile ? "Finish deleting the profile?" : "Recover the last account operation?",
+                deletingProfile
+                    ? "The saved deletion journal will finish permanently removing the selected inactive profile."
+                    : "The switcher will use its saved journal to safely finish or reverse the interrupted " + FriendlyOperation(pending.Operation) + ".",
+                deletingProfile ? "Finish deletion" : "Recover safely",
                 "Cancel",
                 AppDialogTone.Warning,
-                "Recovery will not choose a different account or discard saved profile data.",
-                false) != DialogResult.OK) return;
+                deletingProfile
+                    ? "The active ChatGPT account and shared local Codex work remain unchanged."
+                    : "Recovery will not choose a different account or discard saved profile data.",
+                deletingProfile) != DialogResult.OK) return;
+            if (deletingProfile)
+            {
+                await RunInPlaceMutationAsync(
+                    "Finishing profile deletion",
+                    "Profile deletion recovered; ChatGPT stayed open",
+                    delegate(OperationContext context)
+                    {
+                        services.RecoverProfileDeletion(context);
+                    });
+                return;
+            }
             await RunMutationAsync("Recovering the last account operation", delegate(OperationContext context)
             {
                 services.RecoverAndRelaunch(context, pending);
@@ -757,6 +821,52 @@ namespace HarnessProfileSwitcher.UI
                 footerStatus.Text = "Operation completed; ChatGPT reopened";
                 inspection = await Task.Run(delegate { return services.Inspect(); });
                 ApplyInspection(inspection);
+            }
+            catch (OperationCanceledException)
+            {
+                footerStatus.Text = "Operation cancelled before account state changed";
+            }
+            catch (Exception exception)
+            {
+                failure = exception;
+            }
+            if (failure != null)
+            {
+                await RefreshAfterFailureAsync(context);
+                footerStatus.Text = "Review the current account state";
+                AppDialog.Show(
+                    this,
+                    inspection != null && inspection.State.Mode == HarnessMode.RecoveryRequired
+                        ? "Recovery is required"
+                        : "The operation didn’t finish",
+                    SafeErrorMessage(failure),
+                    "Review status",
+                    null,
+                    AppDialogTone.Error,
+                    inspection != null && inspection.State.Mode == HarnessMode.RecoveryRequired
+                        ? "Use Recover safely before attempting another account action."
+                        : "The switcher refreshed the current state. Follow the action shown in the main window before trying again.",
+                    false);
+            }
+            SetBusy(false, footerStatus.Text);
+        }
+
+        private async Task RunInPlaceMutationAsync(
+            string status,
+            string completionStatus,
+            Action<OperationContext> operation)
+        {
+            if (services == null || busy) return;
+            OperationContext context = null;
+            Exception failure = null;
+            SetBusy(true, status);
+            try
+            {
+                context = await Task.Run(delegate { return services.CreateOperationContext(); });
+                await Task.Run(delegate { operation(context); });
+                inspection = await Task.Run(delegate { return services.Inspect(); });
+                ApplyInspection(inspection);
+                footerStatus.Text = completionStatus;
             }
             catch (OperationCanceledException)
             {

@@ -1,6 +1,6 @@
 # Live-Slot State Machine
 
-This specification defines the account-state model, normal switching protocol, onboarding workflow, and crash recovery behavior for Harness Profile Switcher.
+This specification defines the account-state model, normal switching protocol, onboarding workflow, permanent inactive-profile deletion, and crash recovery behavior for Harness Profile Switcher.
 
 The design goal is to preserve the newest OAuth state for every account while keeping the user's local Codex history, projects, configuration, memories, plugins, and skills shared.
 
@@ -347,11 +347,18 @@ No account identity or token value is extracted from the authentication file. Th
 
 An interrupted onboarding is detected on the next HPS start and offers only Finalize or Cancel until resolved.
 
-## Rename and archive
+## Permanent inactive-profile deletion
 
-Renaming changes only `profile.json.displayName` through an atomic metadata write.
+Only an inactive Ready profile may be deleted. Active, pending, broken, or recovery-required profiles cannot be deletion targets.
 
-Only an inactive Ready profile may be archived. Its profile directory is moved under `D:\fordeletion\HarnessProfileSwitcher\archived-profiles`, and its inactive junction is parked as non-loadable metadata. Active, pending, broken, or recovery-required profiles cannot be archived.
+1. Write a `delete-profile` transaction journal containing the exact active profile, deletion target, inactive junction, profile directory, transaction-local staging directory, and full profile-tree fingerprint.
+2. Verify that the active ledger, live authentication, and live browser junction remain healthy.
+3. Verify and delete only the target's inactive junction.
+4. Move the complete target profile directory into `transactions\<transaction-id>\profile-delete-staging`.
+5. Verify the staged tree against the pre-deletion fingerprint, reject any reparse point, and permanently delete the staged tree.
+6. Verify that the original profile directory, inactive junction, and staging directory are absent, then mark the journal completed.
+
+The ledger is not rewritten because it records only the active profile; registered profiles are discovered from their protected profile directories. Recovery always rolls a confirmed deletion forward. If interruption occurs during recursive content deletion, recovery rejects reparse points and finishes deleting the exact validated transaction-local staging path. Deleted profile data is not moved to `D:\fordeletion`.
 
 ## Recovery classification
 

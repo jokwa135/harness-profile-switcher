@@ -35,6 +35,7 @@ namespace HarnessProfileSwitcher.Core
     {
         DirectoryFingerprint Fingerprint(string path);
         void MoveDirectory(string sourcePath, string destinationPath);
+        void DeleteDirectory(string path);
     }
 
     public sealed class VerifiedDirectoryMover : IVerifiedDirectoryMover
@@ -151,6 +152,22 @@ namespace HarnessProfileSwitcher.Core
             if (!before.EqualsFingerprint(after))
             {
                 throw new IOException("Directory integrity changed during move to: " + destinationPath);
+            }
+        }
+
+        public void DeleteDirectory(string path)
+        {
+            path = Path.GetFullPath(path).TrimEnd(Path.DirectorySeparatorChar);
+            if (!Directory.Exists(path))
+            {
+                return;
+            }
+
+            Fingerprint(path);
+            Directory.Delete(path, true);
+            if (Directory.Exists(path) || File.Exists(path))
+            {
+                throw new IOException("Verified directory deletion left the path in place: " + path);
             }
         }
 

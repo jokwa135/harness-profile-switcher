@@ -128,6 +128,29 @@ namespace HarnessProfileSwitcher.UI
                         graphics.DrawLine(pen, cx - d, cy - d, cx + d, cy + d);
                         graphics.DrawLine(pen, cx - d, cy + d, cx + d, cy - d);
                         break;
+                    case ButtonGlyph.Delete:
+                        float binWidth = span * 0.46f;
+                        float binTop = cy - span * 0.16f;
+                        float binBottom = cy + span * 0.34f;
+                        graphics.DrawRectangle(
+                            pen,
+                            cx - binWidth / 2f,
+                            binTop,
+                            binWidth,
+                            binBottom - binTop);
+                        graphics.DrawLine(
+                            pen,
+                            cx - span * 0.34f,
+                            cy - span * 0.29f,
+                            cx + span * 0.34f,
+                            cy - span * 0.29f);
+                        graphics.DrawLine(
+                            pen,
+                            cx - span * 0.13f,
+                            cy - span * 0.40f,
+                            cx + span * 0.13f,
+                            cy - span * 0.40f);
+                        break;
                     case ButtonGlyph.Check:
                         graphics.DrawLines(pen, new[]
                         {
@@ -240,6 +263,7 @@ namespace HarnessProfileSwitcher.UI
         Primary,
         Secondary,
         Danger,
+        DangerGhost,
         Ghost
     }
 
@@ -251,6 +275,7 @@ namespace HarnessProfileSwitcher.UI
         Refresh,
         Check,
         Recover,
+        Delete,
         Close
     }
 
@@ -453,7 +478,12 @@ namespace HarnessProfileSwitcher.UI
 
             if (Focused && ShowFocusCues && Enabled)
             {
-                using (Pen focusPen = new Pen(kind == ActionButtonKind.Primary ? Color.White : VisualTheme.AccentText, 1f))
+                Color focusColor = kind == ActionButtonKind.Primary
+                    ? Color.White
+                    : kind == ActionButtonKind.Danger || kind == ActionButtonKind.DangerGhost
+                        ? VisualTheme.Danger
+                        : VisualTheme.AccentText;
+                using (Pen focusPen = new Pen(focusColor, 1f))
                 {
                     graphics.DrawRectangle(focusPen, 2, 2, Width - 5, Height - 5);
                 }
@@ -484,6 +514,14 @@ namespace HarnessProfileSwitcher.UI
             {
                 background = pressed || hovered ? VisualTheme.DangerHover : VisualTheme.Danger;
                 foreground = Color.White;
+                return;
+            }
+            if (kind == ActionButtonKind.DangerGhost)
+            {
+                background = pressed
+                    ? VisualTheme.SoftDanger
+                    : hovered ? Color.FromArgb(55, 27, 28) : VisualTheme.BackgroundBehind(this);
+                foreground = hovered || pressed ? VisualTheme.DangerHover : VisualTheme.Danger;
                 return;
             }
             if (kind == ActionButtonKind.Ghost)

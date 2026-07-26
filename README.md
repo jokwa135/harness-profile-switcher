@@ -8,7 +8,7 @@ Contributor acknowledgments are recorded in [CONTRIBUTORS.md](CONTRIBUTORS.md).
 
 ## Validation status
 
-Version `1.0.0-local` has passed the automated recovery, security, process-control, state-inspection, and non-live end-to-end tests included in this repository. Live first-account registration and profile switching have also been confirmed on this PC. The installed ChatGPT package boundary is checked independently because Store updates can change it.
+Version `1.1.0-local` has passed the automated recovery, security, process-control, profile-deletion, state-inspection, and non-live end-to-end tests included in this repository. Live first-account registration and profile switching have also been confirmed on this PC. The installed ChatGPT package boundary is checked independently because Store updates can change it.
 
 ## Current scope
 
@@ -17,7 +17,7 @@ Version `1.0.0-local` has passed the automated recovery, security, process-contr
 - Default `%USERPROFILE%\.codex` location; custom `CODEX_HOME` is blocked.
 - Unlimited local profiles, subject to available disk space.
 - One initial OAuth sign-in for each newly added account.
-- No installer, updater, profile deletion, or automated decommissioning yet.
+- No installer, updater, or automated decommissioning yet.
 
 ## Safety model
 
@@ -25,6 +25,7 @@ Version `1.0.0-local` has passed the automated recovery, security, process-contr
 - Cancelled or ambiguous artifacts are preserved under `D:\fordeletion\HarnessProfileSwitcher`.
 - Runtime and credential storage is restricted to the current Windows user, SYSTEM, and Administrators.
 - Profile changes are journaled and recoverable.
+- Inactive profile deletion is permanent, journaled, and recoverable if interrupted.
 - ChatGPT is stopped before account files or browser junctions are changed.
 - The live `.codex` history, projects, configuration, skills, and plugins are never profile-switched.
 

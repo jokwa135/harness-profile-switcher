@@ -21,6 +21,7 @@ namespace HarnessProfileSwitcher.Core
         public string Status { get; set; }
         public bool IsActive { get; set; }
         public bool CanSwitch { get; set; }
+        public bool CanDelete { get; set; }
     }
 
     public sealed class PendingTransactionSummary
@@ -231,6 +232,7 @@ namespace HarnessProfileSwitcher.Core
                                    LinkTargets(paths.InactiveLinkPath(record.ProfileId), paths.ProfileBrowserPath(record.ProfileId));
                     summary.Status = healthy ? "Ready" : "Broken";
                     summary.CanSwitch = healthy && string.IsNullOrWhiteSpace(candidateId);
+                    summary.CanDelete = healthy && string.IsNullOrWhiteSpace(candidateId);
                 }
 
                 if (!string.IsNullOrWhiteSpace(previousId) &&
@@ -325,7 +327,8 @@ namespace HarnessProfileSwitcher.Core
                    string.Equals(operation, ProfileLifecycleEngine.RegisterFirstOperation, StringComparison.Ordinal) ||
                    string.Equals(operation, ProfileLifecycleEngine.BeginOnboardingOperation, StringComparison.Ordinal) ||
                    string.Equals(operation, ProfileLifecycleEngine.FinalizeOnboardingOperation, StringComparison.Ordinal) ||
-                   string.Equals(operation, ProfileLifecycleEngine.CancelOnboardingOperation, StringComparison.Ordinal);
+                   string.Equals(operation, ProfileLifecycleEngine.CancelOnboardingOperation, StringComparison.Ordinal) ||
+                   string.Equals(operation, ProfileDeletionEngine.DeleteProfileOperation, StringComparison.Ordinal);
         }
 
         private sealed class ProfileRecord

@@ -167,6 +167,9 @@ namespace HarnessProfileSwitcher.Core
 
         [DataMember(Name = "directoryTotalLength", Order = 35)]
         public long DirectoryTotalLength { get; set; }
+
+        [DataMember(Name = "deletionStagingPath", Order = 36, EmitDefaultValue = false)]
+        public string DeletionStagingPath { get; set; }
     }
 
     public static class TransactionPhases
@@ -211,6 +214,12 @@ namespace HarnessProfileSwitcher.Core
         public const string CandidateProfileQuarantined = "CandidateProfileQuarantined";
         public const string PreviousAuthActivateIntent = "PreviousAuthActivateIntent";
         public const string PreviousAuthActivated = "PreviousAuthActivated";
+        public const string ProfileDeleteLinkIntent = "ProfileDeleteLinkIntent";
+        public const string ProfileDeleteLinkDeleted = "ProfileDeleteLinkDeleted";
+        public const string ProfileDeleteStageIntent = "ProfileDeleteStageIntent";
+        public const string ProfileDeleteStaged = "ProfileDeleteStaged";
+        public const string ProfileDeleteContentIntent = "ProfileDeleteContentIntent";
+        public const string ProfileDeleteContentDeleted = "ProfileDeleteContentDeleted";
 
         public static bool IsTerminal(string phase)
         {
@@ -249,6 +258,21 @@ namespace HarnessProfileSwitcher.Core
         public string Result { get; set; }
         public string ActiveProfileId { get; set; }
         public string CandidateProfileId { get; set; }
+    }
+
+    public sealed class ProfileDeletionResult
+    {
+        public string TransactionId { get; set; }
+        public string ActiveProfileId { get; set; }
+        public string DeletedProfileId { get; set; }
+    }
+
+    public sealed class ProfileDeletionRecoveryResult
+    {
+        public string TransactionId { get; set; }
+        public string Result { get; set; }
+        public string ActiveProfileId { get; set; }
+        public string DeletedProfileId { get; set; }
     }
 
     public interface IProcessGuard
