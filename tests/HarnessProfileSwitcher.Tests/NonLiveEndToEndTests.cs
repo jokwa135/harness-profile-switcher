@@ -13,8 +13,8 @@ namespace HarnessProfileSwitcher.Tests
         public static int Run()
         {
             string runId = Guid.NewGuid().ToString("N");
-            string root = Path.Combine(@"D:\AI\Temp\HarnessProfileSwitcher\NonLiveE2E", runId);
-            string deletionRoot = Path.Combine(@"D:\fordeletion\HarnessProfileSwitcher-nonlive-e2e-artifacts", runId);
+            string root = Path.Combine(FixtureWorkspace.PathFor("NonLiveE2E"), runId);
+            string deletionRoot = Path.Combine(FixtureWorkspace.PathFor("Quarantine/nonlive"), runId);
             bool succeeded = false;
             try
             {
@@ -283,7 +283,7 @@ namespace HarnessProfileSwitcher.Tests
 
         private static void Archive(string root)
         {
-            string archiveRoot = @"D:\fordeletion\HarnessProfileSwitcher-nonlive-e2e-runs";
+            string archiveRoot = FixtureWorkspace.PathFor("Archive/nonlive");
             Directory.CreateDirectory(archiveRoot);
             Directory.Move(root, Path.Combine(archiveRoot, Path.GetFileName(root)));
         }

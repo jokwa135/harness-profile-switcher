@@ -22,8 +22,12 @@ namespace HarnessProfileSwitcher.UI
         private readonly Label accountsSummary;
         private readonly Label footerStatus;
         private readonly ActionButton refreshButton;
+        private readonly TableLayoutPanel content;
+        private readonly FlowLayoutPanel accountActions;
         private DesktopInspection inspection;
         private bool busy;
+        private bool previewScaling;
+        private bool resizingCards;
 
         public MainForm(ApplicationServices services)
             : this(services, null)
@@ -46,9 +50,10 @@ namespace HarnessProfileSwitcher.UI
             ForeColor = VisualTheme.Ink;
             Font = VisualTheme.Font(10f, FontStyle.Regular);
             StartPosition = FormStartPosition.CenterScreen;
-            ClientSize = new Size(920, 684);
-            MinimumSize = new Size(840, 620);
+            ClientSize = new Size(960, 760);
+            MinimumSize = new Size(760, 600);
             AutoScaleMode = AutoScaleMode.Dpi;
+            AutoScaleDimensions = new SizeF(96f, 96f);
 
             TableLayoutPanel root = new TableLayoutPanel
             {
@@ -59,7 +64,7 @@ namespace HarnessProfileSwitcher.UI
                 Margin = Padding.Empty,
                 Padding = Padding.Empty
             };
-            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 78));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
             root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             root.RowStyles.Add(new RowStyle(SizeType.Absolute, 38));
 
@@ -109,7 +114,7 @@ namespace HarnessProfileSwitcher.UI
             }, 0, 0);
             titles.Controls.Add(new Label
             {
-                Text = "Switch accounts without losing your local Codex work.",
+                Text = "ChatGPT accounts · shared local Codex work",
                 Font = VisualTheme.Font(9.5f, FontStyle.Regular),
                 ForeColor = VisualTheme.MutedInk,
                 Dock = DockStyle.Fill,
@@ -142,24 +147,24 @@ namespace HarnessProfileSwitcher.UI
             headerLayout.Controls.Add(refreshButton, 3, 0);
             header.Controls.Add(headerLayout);
 
-            TableLayoutPanel content = new TableLayoutPanel
+            content = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
                 ColumnCount = 1,
                 RowCount = 3,
-                Padding = new Padding(30, 24, 30, 16),
+                Padding = new Padding(24, 18, 24, 12),
                 BackColor = VisualTheme.Canvas,
                 Margin = Padding.Empty
             };
-            content.RowStyles.Add(new RowStyle(SizeType.Absolute, 212));
-            content.RowStyles.Add(new RowStyle(SizeType.Absolute, 46));
+            content.RowStyles.Add(new RowStyle(SizeType.Absolute, 118));
+            content.RowStyles.Add(new RowStyle(SizeType.Absolute, 52));
             content.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
 
             SurfacePanel hero = new SurfacePanel
             {
                 Dock = DockStyle.Fill,
-                CornerRadius = 18,
-                Padding = new Padding(28, 22, 28, 20),
+                CornerRadius = 12,
+                Padding = new Padding(20, 12, 20, 10),
                 Margin = Padding.Empty
             };
             TableLayoutPanel heroLayout = new TableLayoutPanel
@@ -170,10 +175,10 @@ namespace HarnessProfileSwitcher.UI
                 BackColor = Color.Transparent,
                 Margin = Padding.Empty
             };
-            heroLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 24));
-            heroLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 44));
+            heroLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));
+            heroLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32));
             heroLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-            heroLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 52));
+            heroLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));
             stateContext = new Label
             {
                 Text = "Account status",
@@ -186,7 +191,8 @@ namespace HarnessProfileSwitcher.UI
             heroTitle = new Label
             {
                 Text = "Loading account state",
-                Font = VisualTheme.Font(19f, FontStyle.Bold),
+                AutoEllipsis = true,
+                Font = VisualTheme.Font(16f, FontStyle.Bold),
                 ForeColor = VisualTheme.Ink,
                 Dock = DockStyle.Fill,
                 TextAlign = ContentAlignment.MiddleLeft,
@@ -207,7 +213,9 @@ namespace HarnessProfileSwitcher.UI
             {
                 Dock = DockStyle.Fill,
                 BackColor = Color.Transparent,
-                Margin = Padding.Empty
+                Margin = Padding.Empty,
+                Height = 50,
+                Visible = false
             };
             heroActions = new FlowLayoutPanel
             {
@@ -267,20 +275,22 @@ namespace HarnessProfileSwitcher.UI
             TableLayoutPanel accountsHeader = new TableLayoutPanel
             {
                 Dock = DockStyle.Fill,
-                ColumnCount = 2,
+                ColumnCount = 3,
                 RowCount = 1,
                 BackColor = VisualTheme.Canvas,
                 Margin = Padding.Empty
             };
             accountsHeader.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             accountsHeader.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 180));
+            accountsHeader.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 164));
+            accountsHeader.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
             accountsHeader.Controls.Add(new Label
             {
                 Text = "Accounts",
                 Font = VisualTheme.Font(12f, FontStyle.Bold),
                 ForeColor = VisualTheme.Ink,
                 Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.BottomLeft,
+                TextAlign = ContentAlignment.MiddleLeft,
                 Margin = new Padding(2, 0, 0, 10)
             }, 0, 0);
             accountsSummary = new Label
@@ -289,10 +299,17 @@ namespace HarnessProfileSwitcher.UI
                 Font = VisualTheme.Font(9f, FontStyle.Regular),
                 ForeColor = VisualTheme.SubtleInk,
                 Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.BottomRight,
+                TextAlign = ContentAlignment.MiddleRight,
                 Margin = new Padding(0, 0, 8, 10)
             };
             accountsHeader.Controls.Add(accountsSummary, 1, 0);
+            accountActions = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft,
+                WrapContents = false, BackColor = VisualTheme.Canvas, Margin = Padding.Empty,
+                Padding = new Padding(0, 8, 0, 0)
+            };
+            accountsHeader.Controls.Add(accountActions, 2, 0);
 
             profilesPanel = new FlowLayoutPanel
             {
@@ -408,6 +425,9 @@ namespace HarnessProfileSwitcher.UI
             stateContext.Text = ContextFor(state.Mode);
             heroTitle.Text = state.Title;
             heroDescription.Text = DescriptionFor(state);
+            bool normal = state.Mode == HarnessMode.Active;
+            content.RowStyles[0].Height = (normal ? 108 : 208) * CurrentAutoScaleDimensions.Width / 96f;
+            heroActions.Parent.Visible = !normal;
             packageStatus.Text = value.MainProcessCount == 1
                 ? "ChatGPT open"
                 : value.MainProcessCount == 0 ? "ChatGPT closed" : "Check ChatGPT";
@@ -420,7 +440,8 @@ namespace HarnessProfileSwitcher.UI
 
         private void ConfigureHeroActions(ApplicationStateSnapshot state)
         {
-            heroActions.Controls.Clear();
+            while (heroActions.Controls.Count > 0) heroActions.Controls[0].Dispose();
+            while (accountActions.Controls.Count > 0) accountActions.Controls[0].Dispose();
             if (state.Mode == HarnessMode.Unmanaged)
             {
                 AddHeroAction("Register current account", ActionButtonKind.Primary, ButtonGlyph.Add, async delegate { await RegisterCurrentAsync(); });
@@ -428,7 +449,13 @@ namespace HarnessProfileSwitcher.UI
             }
             if (state.Mode == HarnessMode.Active)
             {
-                AddHeroAction("Add account", ActionButtonKind.Primary, ButtonGlyph.Add, async delegate { await BeginOnboardingAsync(); });
+                ActionButton add = new ActionButton
+                {
+                    Text = "Add account", Kind = ActionButtonKind.Primary, Glyph = ButtonGlyph.Add,
+                    Size = new Size(156, 40), AccessibleName = "Add account", Margin = Padding.Empty
+                };
+                add.Click += async delegate { await BeginOnboardingAsync(); };
+                accountActions.Controls.Add(add);
                 return;
             }
             if (state.Mode == HarnessMode.PendingOnboarding)
@@ -474,7 +501,7 @@ namespace HarnessProfileSwitcher.UI
         private void ConfigureProfiles(ApplicationStateSnapshot state)
         {
             profilesPanel.SuspendLayout();
-            profilesPanel.Controls.Clear();
+            while (profilesPanel.Controls.Count > 0) profilesPanel.Controls[0].Dispose();
             int count = state.Profiles == null ? 0 : state.Profiles.Count;
             accountsSummary.Text = count == 0
                 ? "No saved accounts"
@@ -535,118 +562,139 @@ namespace HarnessProfileSwitcher.UI
 
         private Control CreateProfileCard(ProfileSummary profile, HarnessMode mode)
         {
-            bool allowSwitching = mode == HarnessMode.Active;
+            CodexUsageSnapshot usage;
+            if (inspection.Usage == null || !inspection.Usage.TryGetValue(profile.ProfileId, out usage))
+                usage = CodexUsageSnapshot.Unavailable(CodexUsageReader.SafetyReason);
+            DateTimeOffset observedNow = DateTimeOffset.UtcNow;
             SurfacePanel card = new SurfacePanel
             {
-                Height = 78,
-                CornerRadius = 14,
-                Padding = new Padding(20, 9, 18, 9),
-                Margin = new Padding(0, 0, 0, 8),
+                Height = 156 + Math.Max(0, usage.Windows.Count - 2) * 22, CornerRadius = 12, Padding = new Padding(18, 10, 18, 10),
+                Margin = new Padding(0, 0, 0, 10), Tag = "profile-card",
                 FillColor = profile.IsActive ? VisualTheme.SoftAccent : VisualTheme.Surface,
-                Emphasized = profile.IsActive,
-                Tag = "profile-card"
+                Emphasized = profile.IsActive, AccessibleName = profile.DisplayName + " profile"
             };
             TableLayoutPanel layout = new TableLayoutPanel
             {
-                Dock = DockStyle.Fill,
-                ColumnCount = 3,
-                RowCount = 2,
-                BackColor = Color.Transparent,
-                Margin = Padding.Empty
+                Dock = DockStyle.Fill, ColumnCount = 3, RowCount = 5,
+                BackColor = Color.Transparent, Margin = Padding.Empty
             };
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 56));
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 54));
             layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
-            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 248));
-            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 58));
-            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 42));
-            Avatar avatar = new Avatar
-            {
-                Size = new Size(44, 44),
-                Anchor = AnchorStyles.None,
-                Muted = !profile.IsActive && !string.Equals(profile.Status, "Ready", StringComparison.Ordinal)
-                        && !string.Equals(profile.Status, "Active", StringComparison.Ordinal),
-                Margin = new Padding(0, 0, 8, 0)
-            };
+            layout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 224));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 28));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 24));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 24));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20));
+            Avatar avatar = new Avatar { Size = new Size(42, 42), Anchor = AnchorStyles.Left,
+                Muted = profile.Status == "Broken", Margin = Padding.Empty };
             avatar.SetName(profile.DisplayName);
             layout.Controls.Add(avatar, 0, 0);
             layout.SetRowSpan(avatar, 2);
-            Label name = new Label
-            {
-                Text = profile.DisplayName,
-                Font = VisualTheme.Font(12f, FontStyle.Bold),
-                ForeColor = VisualTheme.Ink,
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.BottomLeft,
-                AutoEllipsis = true,
-                Margin = Padding.Empty
-            };
-            Label detail = new Label
-            {
-                Text = ProfileDetailStatus(profile, mode),
-                Font = VisualTheme.Font(9.25f, FontStyle.Regular),
-                ForeColor = StatusColor(profile.Status),
-                Dock = DockStyle.Fill,
-                TextAlign = ContentAlignment.TopLeft,
-                Margin = new Padding(0, 2, 0, 0)
-            };
+            Label name = CardLabel(profile.DisplayName, 12f, VisualTheme.Ink, FontStyle.Bold);
+            name.AutoEllipsis = true;
+            name.AccessibleName = profile.DisplayName;
             layout.Controls.Add(name, 1, 0);
-            layout.Controls.Add(detail, 1, 1);
-            if (profile.CanSwitch && allowSwitching)
+            layout.Controls.Add(CardLabel(ProfileDetailStatus(profile, mode), 9.5f, StatusColor(profile.Status), FontStyle.Regular), 1, 1);
+            FlowLayoutPanel actions = new FlowLayoutPanel
             {
-                FlowLayoutPanel actions = new FlowLayoutPanel
-                {
-                    Dock = DockStyle.Fill,
-                    FlowDirection = FlowDirection.RightToLeft,
-                    WrapContents = false,
-                    BackColor = Color.Transparent,
-                    Padding = new Padding(0, 6, 0, 6),
-                    Margin = Padding.Empty
-                };
-                ActionButton switchButton = new ActionButton
-                {
-                    Text = "Switch",
-                    Kind = ActionButtonKind.Secondary,
-                    Glyph = ButtonGlyph.Switch,
-                    Size = new Size(118, 42),
-                    Margin = Padding.Empty,
-                    AccessibleName = "Switch to " + profile.DisplayName
-                };
+                Dock = DockStyle.Fill, FlowDirection = FlowDirection.RightToLeft, WrapContents = false,
+                BackColor = Color.Transparent, Margin = Padding.Empty, Padding = new Padding(0, 5, 0, 0)
+            };
+            ActionButton more = new ActionButton { Text = "More", Kind = ActionButtonKind.Ghost,
+                Size = new Size(92, 42), Margin = Padding.Empty, AccessibleName = "More actions for " + profile.DisplayName,
+                Enabled = mode == HarnessMode.Active && profile.CanRename };
+            ContextMenuStrip menu = new ContextMenuStrip { BackColor = VisualTheme.Elevated, ForeColor = VisualTheme.Ink,
+                Font = VisualTheme.Font(10f, FontStyle.Regular), ShowImageMargin = false };
+            ToolStripMenuItem rename = new ToolStripMenuItem("Rename profile…") { Enabled = more.Enabled };
+            rename.Click += async delegate { await RenameProfileAsync(profile); };
+            menu.Items.Add(rename);
+            if (!profile.IsActive && profile.CanDelete)
+            {
+                menu.Items.Add(new ToolStripSeparator());
+                ToolStripMenuItem delete = new ToolStripMenuItem("Delete profile…") { ForeColor = VisualTheme.Danger,
+                    Enabled = mode == HarnessMode.Active };
+                delete.Click += async delegate { await DeleteProfileAsync(profile); };
+                menu.Items.Add(delete);
+            }
+            more.ContextMenuStrip = menu;
+            more.Click += delegate { menu.Show(more, new Point(0, more.Height)); };
+            more.Disposed += delegate { menu.Dispose(); };
+            actions.Controls.Add(more);
+            if (profile.CanSwitch && mode == HarnessMode.Active)
+            {
+                ActionButton switchButton = new ActionButton { Text = "Switch", Kind = ActionButtonKind.Secondary,
+                    Glyph = ButtonGlyph.Switch, Size = new Size(120, 42), Margin = new Padding(0, 0, 8, 0),
+                    AccessibleName = "Switch to " + profile.DisplayName };
                 switchButton.Click += async delegate { await SwitchAsync(profile); };
                 actions.Controls.Add(switchButton);
-
-                if (profile.CanDelete)
-                {
-                    ActionButton deleteButton = new ActionButton
-                    {
-                        Text = "Delete",
-                        Kind = ActionButtonKind.DangerGhost,
-                        Glyph = ButtonGlyph.Delete,
-                        Size = new Size(106, 42),
-                        Margin = new Padding(8, 0, 0, 0),
-                        AccessibleName = "Delete " + profile.DisplayName
-                    };
-                    deleteButton.Click += async delegate { await DeleteProfileAsync(profile); };
-                    actions.Controls.Add(deleteButton);
-                }
-                layout.Controls.Add(actions, 2, 0);
-                layout.SetRowSpan(actions, 2);
             }
             else
             {
-                Label stateLabel = new Label
-                {
-                    Text = ProfileActionStatus(profile, mode),
-                    Font = VisualTheme.Font(9.25f, FontStyle.Bold),
-                    ForeColor = ProfileActionColor(profile, mode),
-                    Dock = DockStyle.Fill,
-                    TextAlign = ContentAlignment.MiddleRight,
-                    Margin = new Padding(8, 0, 2, 0)
-                };
-                layout.Controls.Add(stateLabel, 2, 0);
-                layout.SetRowSpan(stateLabel, 2);
+                Label status = CardLabel(ProfileActionStatus(profile, mode), 9.5f, ProfileActionColor(profile, mode), FontStyle.Bold);
+                status.Size = new Size(120, 42); status.Dock = DockStyle.None;
+                status.TextAlign = ContentAlignment.MiddleRight;
+                status.Margin = new Padding(0, 0, 8, 0);
+                actions.Controls.Add(status);
             }
+            layout.Controls.Add(actions, 2, 0); layout.SetRowSpan(actions, 2);
+            string quotaStatus = usage.ObservedAt.HasValue && usage.Freshness(observedNow).StartsWith("Stale", StringComparison.Ordinal)
+                ? "Stale snapshot" : usage.Status;
+            Label limits = CardLabel("Codex limits · " + quotaStatus, 9.5f, VisualTheme.MutedInk, FontStyle.Bold);
+            limits.Padding = new Padding(0, 4, 0, 0);
+            layout.Controls.Add(limits, 0, 2); layout.SetColumnSpan(limits, 3);
+            Label quota = CardLabel(usage.Detail(observedNow), 9.5f, VisualTheme.MutedInk, FontStyle.Regular);
+            quota.AutoEllipsis = true;
+            layout.Controls.Add(quota, 0, 3); layout.SetColumnSpan(quota, 3);
+            Label freshness = CardLabel(usage.Freshness(observedNow), 9f, VisualTheme.SubtleInk, FontStyle.Regular);
+            freshness.AutoEllipsis = true;
+            layout.Controls.Add(freshness, 0, 4); layout.SetColumnSpan(freshness, 3);
             card.Controls.Add(layout);
+            float dpiScale = CurrentAutoScaleDimensions.Width / 96f;
+            if (dpiScale != 1f) card.Scale(new SizeF(dpiScale, dpiScale));
             return card;
+        }
+
+        private static Label CardLabel(string text, float size, Color color, FontStyle style)
+        {
+            return new Label { Text = text, Font = VisualTheme.Font(size, style), ForeColor = color,
+                Dock = DockStyle.Fill, TextAlign = ContentAlignment.MiddleLeft, Margin = Padding.Empty };
+        }
+
+        private async Task RenameProfileAsync(ProfileSummary profile)
+        {
+            if (services == null || busy) return;
+            string name;
+            using (ProfileNameDialog dialog = new ProfileNameDialog("Rename profile",
+                "Changes this local label only. Your sign-in, account folder and local work stay unchanged. ChatGPT stays open.",
+                "Save name", profile.DisplayName))
+            {
+                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+                name = dialog.ProfileName;
+            }
+            if (string.Equals(name, profile.DisplayName, StringComparison.Ordinal))
+            {
+                footerStatus.Text = "Name unchanged"; return;
+            }
+            SetBusy(true, "Saving local profile name");
+            Exception failure = null;
+            try
+            {
+                bool changed = await Task.Run(delegate { return services.RenameProfile(profile.ProfileId, name); });
+                ApplyInspection(await Task.Run(delegate { return services.Inspect(); }));
+                footerStatus.Text = changed ? "Profile renamed · ChatGPT stayed open" : "Name unchanged";
+            }
+            catch (Exception exception) { failure = exception; }
+            if (failure != null)
+            {
+                // Metadata-only failure: no CreateOperationContext, recovery relaunch, or process control.
+                try { ApplyInspection(await Task.Run(delegate { return services.Inspect(); })); }
+                catch { }
+                footerStatus.Text = "Could not confirm the saved name · ChatGPT was not touched";
+                AppDialog.Show(this, "Review the profile name", SafeErrorMessage(failure), "OK", null,
+                    AppDialogTone.Error, "No account was switched, stopped, or relaunched.", false);
+            }
+            SetBusy(false, footerStatus.Text);
         }
 
         private async Task RegisterCurrentAsync()
@@ -937,10 +985,13 @@ namespace HarnessProfileSwitcher.UI
         {
             busy = value;
             heroActions.Enabled = !value;
+            accountActions.Enabled = !value;
             profilesPanel.Enabled = !value;
             refreshButton.Enabled = !value;
             heroActions.Visible = !value;
             operationPanel.Visible = value;
+            if (operationPanel.Parent != null)
+                operationPanel.Parent.Visible = value || (inspection != null && inspection.State.Mode != HarnessMode.Active);
             activityBar.Visible = value;
             operationStatus.Text = status;
             footerStatus.Text = status;
@@ -949,12 +1000,21 @@ namespace HarnessProfileSwitcher.UI
 
         private void ResizeProfileCards()
         {
+            if (previewScaling || resizingCards) return;
+            resizingCards = true;
+            profilesPanel.SuspendLayout();
             int width = Math.Max(300, profilesPanel.ClientSize.Width - profilesPanel.Padding.Horizontal - 12);
             foreach (Control control in profilesPanel.Controls)
             {
                 if (string.Equals(Convert.ToString(control.Tag), "profile-card", StringComparison.Ordinal)) control.Width = width;
             }
+            profilesPanel.ResumeLayout(true);
+            profilesPanel.PerformLayout();
+            resizingCards = false;
         }
+
+        internal void BeginPreviewScale() { previewScaling = true; }
+        internal void EndPreviewScale() { previewScaling = false; ResizeProfileCards(); PerformLayout(); }
 
         private static string ContextFor(HarnessMode mode)
         {
@@ -969,7 +1029,7 @@ namespace HarnessProfileSwitcher.UI
         {
             if (state.Mode == HarnessMode.Active)
             {
-                return "ChatGPT is using this account. Projects, history, settings, skills, and plugins stay shared on this PC.";
+                return "Projects, history, settings, skills, and plugins stay shared on this PC.";
             }
             if (state.Mode == HarnessMode.Unmanaged)
             {

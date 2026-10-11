@@ -22,6 +22,7 @@ namespace HarnessProfileSwitcher.Core
         public bool IsActive { get; set; }
         public bool CanSwitch { get; set; }
         public bool CanDelete { get; set; }
+        public bool CanRename { get; set; }
     }
 
     public sealed class PendingTransactionSummary
@@ -245,8 +246,13 @@ namespace HarnessProfileSwitcher.Core
                 summaries.Add(summary);
             }
 
+            foreach (ProfileSummary summary in summaries)
+                summary.CanRename = ledger != null && ledger.PendingOnboarding == null &&
+                    (summary.Status == "Active" || summary.Status == "Ready");
+
             return summaries
                 .OrderByDescending(delegate(ProfileSummary item) { return item.IsActive; })
+                // Eligibility is finalized by the inspection's mode in the UI/editor.
                 .ThenBy(delegate(ProfileSummary item) { return item.Status == "Signing in" ? 0 : 1; })
                 .ThenBy(delegate(ProfileSummary item) { return item.DisplayName; }, StringComparer.CurrentCultureIgnoreCase)
                 .ToList();

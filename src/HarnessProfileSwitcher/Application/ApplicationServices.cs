@@ -9,6 +9,7 @@ namespace HarnessProfileSwitcher.Application
         public string PackageVersion { get; set; }
         public int PackageProcessCount { get; set; }
         public int MainProcessCount { get; set; }
+        public System.Collections.Generic.IDictionary<string, CodexUsageSnapshot> Usage { get; set; }
     }
 
     public sealed class OperationContext
@@ -69,9 +70,11 @@ namespace HarnessProfileSwitcher.Application
             IPackageProcessInventory inventory = new WmiPackageProcessInventory(installation);
             PackageProcessSnapshot processes = inventory.Capture();
             ChatGptRuntimeCompatibility.Validate(processes, paths.LiveBrowserLinkPath);
+            ApplicationStateSnapshot state = new ApplicationStateInspector(paths, store, junctions).Inspect();
             return new DesktopInspection
             {
-                State = new ApplicationStateInspector(paths, store, junctions).Inspect(),
+                State = state,
+                Usage = CodexUsageReader.Inspect(state),
                 PackageVersion = installation.PackageVersion,
                 PackageProcessCount = processes.Processes.Count,
                 MainProcessCount = processes.MainProcesses.Count
@@ -101,6 +104,12 @@ namespace HarnessProfileSwitcher.Application
                 DiagnosticOperations.RegisterFirst,
                 delegate { return engine.RegisterFirstProfile(displayName).TransactionId; },
                 engine.MarkLaunchObserved);
+        }
+
+        public bool RenameProfile(string profileId, string displayName)
+        {
+            return new ProfileMetadataEditor(paths, store, junctions, runtimeSecurity, new NoFaultInjector())
+                .Rename(profileId, displayName);
         }
 
         public void BeginOnboardingAndRelaunch(OperationContext context, string displayName)

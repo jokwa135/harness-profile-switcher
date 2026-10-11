@@ -9,6 +9,7 @@ namespace HarnessProfileSwitcher.Tests
         private const string PackageFamily = "OpenAI.Codex_2p2nqsd0c76g0";
         private const string PackageVersion = "fixture-version";
 
+        [STAThread]
         private static int Main(string[] arguments)
         {
             if (arguments != null && arguments.Length == 1 &&
@@ -35,7 +36,8 @@ namespace HarnessProfileSwitcher.Tests
                 int profileDeletionTestCount = ProfileDeletionFixtureTests.Run();
                 int stateInspectorTestCount = ApplicationStateFixtureTests.Run();
                 int runtimeSecurityTestCount = RuntimeSecurityTests.Run();
-                Console.WriteLine("PASS: " + (12 + processControlTestCount + lifecycleTestCount + profileDeletionTestCount + stateInspectorTestCount + runtimeSecurityTestCount) + " fixture suites, including checkpoint and post-effect recovery, journal tamper rejection, permanent inactive-profile deletion, shared-state preservation, package-scoped process control, UI state derivation, ACL hardening, and closed-schema diagnostics");
+                int dashboardTestCount = DashboardFixtureTests.Run();
+                Console.WriteLine("PASS: " + (12 + processControlTestCount + lifecycleTestCount + profileDeletionTestCount + stateInspectorTestCount + runtimeSecurityTestCount + dashboardTestCount) + " fixture suites, including recovery, deletion, process control, ACLs, metadata-only rename, quota validation and dashboard keyboard/layout checks");
                 return 0;
             }
             catch (Exception exception)
@@ -540,7 +542,7 @@ namespace HarnessProfileSwitcher.Tests
             public static Fixture Create(string label)
             {
                 string id = Guid.NewGuid().ToString("N");
-                string root = Path.Combine(@"D:\AI\Temp\HarnessProfileSwitcher\EngineTests", label + "-" + id);
+                string root = Path.Combine(FixtureWorkspace.PathFor("EngineTests"), label.Substring(0, Math.Min(12, label.Length)) + "-" + id.Substring(0,8));
                 string runtimeRoot = Path.Combine(root, "runtime");
                 string liveRoot = Path.Combine(root, "live");
                 string liveAuth = Path.Combine(liveRoot, @".codex\auth.json");
@@ -553,7 +555,7 @@ namespace HarnessProfileSwitcher.Tests
                 fixture.Root = root;
                 fixture.ProfileA = Guid.NewGuid().ToString("D");
                 fixture.ProfileB = Guid.NewGuid().ToString("D");
-                fixture.Paths = new EnginePaths(runtimeRoot, liveAuth, liveBrowser, inactiveLinks, authStaging);
+                fixture.Paths = new EnginePaths(runtimeRoot, liveAuth, liveBrowser, inactiveLinks, authStaging, Path.Combine(root, "quarantine"));
                 fixture.Store = new AtomicJsonStore();
                 fixture.Junctions = new WindowsJunctionManager();
 
@@ -612,7 +614,7 @@ namespace HarnessProfileSwitcher.Tests
 
             public void Archive()
             {
-                string archiveRoot = @"D:\fordeletion\HarnessProfileSwitcher-engine-tests";
+                string archiveRoot = FixtureWorkspace.PathFor("Archive/engine");
                 Directory.CreateDirectory(archiveRoot);
                 string destination = Path.Combine(archiveRoot, Path.GetFileName(Root));
                 if (Directory.Exists(destination))

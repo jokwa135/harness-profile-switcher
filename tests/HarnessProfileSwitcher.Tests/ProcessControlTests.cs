@@ -227,12 +227,7 @@ namespace HarnessProfileSwitcher.Tests
 
         private static string RequiredEnvironmentPath(string variableName)
         {
-            string value = Environment.GetEnvironmentVariable(variableName);
-            if (string.IsNullOrWhiteSpace(value) || !File.Exists(value))
-            {
-                throw new Exception("Required test executable is missing from " + variableName + ".");
-            }
-            return Path.GetFullPath(value);
+            return FixtureWorkspace.HelperExecutable(variableName);
         }
 
         private static void WaitUntil(Func<bool> condition, TimeSpan timeout, string failureMessage)

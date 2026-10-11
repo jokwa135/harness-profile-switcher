@@ -364,8 +364,8 @@ namespace HarnessProfileSwitcher.Tests
             public static Fixture Create(string label)
             {
                 string root = Path.Combine(
-                    @"D:\AI\Temp\HarnessProfileSwitcher\ProfileDeletionTests",
-                    label + "-" + Guid.NewGuid().ToString("N"));
+                    FixtureWorkspace.PathFor("ProfileDeletionTests"),
+                    label.Substring(0, Math.Min(12, label.Length)) + "-" + Guid.NewGuid().ToString("N").Substring(0,8));
                 string liveRoot = Path.Combine(root, "live");
                 string webRoot = Path.Combine(liveRoot, @"AppData\Codex\web");
                 Fixture fixture = new Fixture
@@ -469,7 +469,7 @@ namespace HarnessProfileSwitcher.Tests
                     Console.Error.WriteLine("Profile deletion fixture retained for diagnosis: " + Root);
                     return;
                 }
-                string archiveRoot = @"D:\fordeletion\HarnessProfileSwitcher-profile-deletion-tests";
+                string archiveRoot = FixtureWorkspace.PathFor("Archive/deletion");
                 Directory.CreateDirectory(archiveRoot);
                 Directory.Move(Root, Path.Combine(archiveRoot, Path.GetFileName(Root)));
             }

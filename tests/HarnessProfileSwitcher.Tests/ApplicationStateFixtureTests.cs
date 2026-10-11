@@ -12,12 +12,9 @@ namespace HarnessProfileSwitcher.Tests
 
         public static int Run()
         {
-            DesktopInspection production = new ApplicationServices().Inspect();
-            AssertTrue(production.State != null, "Production state inspection returned no state.");
-            AssertTrue(!string.IsNullOrWhiteSpace(production.PackageVersion), "Production inspection returned no package version.");
-            AssertTrue(production.MainProcessCount <= 1, "Production inspection found more than one main ChatGPT process.");
+            // Fixture verification must never inspect the current user's live account state.
 
-            string root = Path.Combine(@"D:\AI\Temp\HarnessProfileSwitcher\StateInspectorTests", Guid.NewGuid().ToString("N"));
+            string root = Path.Combine(FixtureWorkspace.PathFor("StateInspectorTests"), Guid.NewGuid().ToString("N"));
             string liveRoot = Path.Combine(root, "live");
             string webRoot = Path.Combine(liveRoot, @"AppData\Codex\web");
             EnginePaths paths = new EnginePaths(
@@ -101,7 +98,7 @@ namespace HarnessProfileSwitcher.Tests
             {
                 if (succeeded)
                 {
-                    string archiveRoot = @"D:\fordeletion\HarnessProfileSwitcher-state-inspector-tests";
+                    string archiveRoot = FixtureWorkspace.PathFor("Archive/state");
                     Directory.CreateDirectory(archiveRoot);
                     Directory.Move(root, Path.Combine(archiveRoot, Path.GetFileName(root)));
                 }

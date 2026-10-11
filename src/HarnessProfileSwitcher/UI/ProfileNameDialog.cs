@@ -10,6 +10,11 @@ namespace HarnessProfileSwitcher.UI
         private readonly Label validation;
 
         public ProfileNameDialog(string title, string prompt, string actionText)
+            : this(title, prompt, actionText, string.Empty)
+        {
+        }
+
+        public ProfileNameDialog(string title, string prompt, string actionText, string initialName)
         {
             Text = title;
             Font = VisualTheme.Font(10f, FontStyle.Regular);
@@ -22,6 +27,7 @@ namespace HarnessProfileSwitcher.UI
             StartPosition = FormStartPosition.CenterParent;
             ClientSize = new Size(548, 344);
             AutoScaleMode = AutoScaleMode.Dpi;
+            AutoScaleDimensions = new SizeF(96f, 96f);
             try { Icon = BrandAssets.WindowIcon(); } catch { }
             HandleCreated += delegate { VisualTheme.ApplyDarkTitleBar(Handle); };
 
@@ -68,7 +74,7 @@ namespace HarnessProfileSwitcher.UI
             };
             Label fieldLabel = new Label
             {
-                Text = "Account name",
+                Text = "Profile name",
                 Font = VisualTheme.Font(9.25f, FontStyle.Bold),
                 ForeColor = VisualTheme.Ink,
                 Dock = DockStyle.Fill,
@@ -94,7 +100,7 @@ namespace HarnessProfileSwitcher.UI
             inputSurface.Attach(nameBox);
             nameBox.TextChanged += delegate
             {
-                if (!string.IsNullOrWhiteSpace(nameBox.Text)) validation.Visible = false;
+                validation.Visible = false;
             };
             validation = new Label
             {
@@ -138,8 +144,14 @@ namespace HarnessProfileSwitcher.UI
             };
             accept.Click += delegate
             {
-                if (string.IsNullOrWhiteSpace(nameBox.Text))
+                try
                 {
+                    Core.ProfileMetadataEditor.ValidateName(nameBox.Text);
+                }
+                catch (ArgumentException exception)
+                {
+                    validation.Text = exception.ParamName == "name" && !string.IsNullOrWhiteSpace(nameBox.Text)
+                        ? "Names cannot contain control characters." : "Enter a profile name.";
                     validation.Visible = true;
                     nameBox.Focus();
                     return;
@@ -159,7 +171,8 @@ namespace HarnessProfileSwitcher.UI
             Controls.Add(accent);
             AcceptButton = accept;
             CancelButton = cancel;
-            Shown += delegate { nameBox.Focus(); };
+            nameBox.Text = initialName ?? string.Empty;
+            Shown += delegate { nameBox.Focus(); nameBox.SelectAll(); };
         }
 
         public string ProfileName

@@ -234,7 +234,9 @@ namespace HarnessProfileSwitcher.UI
 
         private static string ResolveFontFamily()
         {
-            string[] preferences = { "GoldmanUI", "Goldman", "Satoshi Variable" };
+            // Segoe UI on this host renders a display-style substitute despite its nominal
+            // GDI face name. Prefer a visually verified Windows functional sans face.
+            string[] preferences = { "Tahoma", "Microsoft Sans Serif" };
             try
             {
                 using (InstalledFontCollection fonts = new InstalledFontCollection())
@@ -245,7 +247,13 @@ namespace HarnessProfileSwitcher.UI
                         {
                             if (string.Equals(family.Name, preference, StringComparison.OrdinalIgnoreCase))
                             {
-                                return family.Name;
+                                using (Font candidate = new Font(family, 10f))
+                                using (Font boldCandidate = new Font(family, 10f, FontStyle.Bold))
+                                {
+                                    if (string.Equals(NativeFontFace(candidate), preference, StringComparison.OrdinalIgnoreCase) &&
+                                        string.Equals(NativeFontFace(boldCandidate), preference, StringComparison.OrdinalIgnoreCase))
+                                        return family.Name;
+                                }
                             }
                         }
                     }
@@ -254,7 +262,28 @@ namespace HarnessProfileSwitcher.UI
             catch
             {
             }
-            return "Segoe UI";
+            return "Tahoma";
+        }
+
+        [DllImport("gdi32.dll", CharSet = CharSet.Unicode)]
+        private static extern int GetTextFace(IntPtr dc, int count, System.Text.StringBuilder face);
+        [DllImport("gdi32.dll")] private static extern IntPtr CreateCompatibleDC(IntPtr dc);
+        [DllImport("gdi32.dll")] private static extern IntPtr SelectObject(IntPtr dc, IntPtr obj);
+        [DllImport("gdi32.dll")] private static extern bool DeleteObject(IntPtr obj);
+        [DllImport("gdi32.dll")] private static extern bool DeleteDC(IntPtr dc);
+
+        internal static string NativeFontFace(Font font)
+        {
+            IntPtr dc = CreateCompatibleDC(IntPtr.Zero);
+            IntPtr handle = font.ToHfont();
+            IntPtr previous = SelectObject(dc, handle);
+            try
+            {
+                System.Text.StringBuilder face = new System.Text.StringBuilder(128);
+                GetTextFace(dc, face.Capacity, face);
+                return face.ToString();
+            }
+            finally { SelectObject(dc, previous); DeleteObject(handle); DeleteDC(dc); }
         }
     }
 
@@ -412,7 +441,7 @@ namespace HarnessProfileSwitcher.UI
             // Flat rectangle that fills the whole control — no rounded corners, so there are
             // no corner pixels to alias or bleed. Pixel-perfect at any DPI.
             Rectangle fill = new Rectangle(0, 0, Width, Height);
-            bool gradientFill = Enabled && !pressed && (kind == ActionButtonKind.Primary || kind == ActionButtonKind.Danger);
+            bool gradientFill = false;
             if (gradientFill)
             {
                 Color top = kind == ActionButtonKind.Primary

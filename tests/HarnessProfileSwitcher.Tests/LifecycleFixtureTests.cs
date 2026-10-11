@@ -730,7 +730,7 @@ namespace HarnessProfileSwitcher.Tests
 
             public static LifecycleFixture CreateUnmanaged(string label)
             {
-                string root = Path.Combine(@"D:\AI\Temp\HarnessProfileSwitcher\LifecycleTests", label + "-" + Guid.NewGuid().ToString("N"));
+                string root = Path.Combine(FixtureWorkspace.PathFor("LifecycleTests"), label.Substring(0, Math.Min(12, label.Length)) + "-" + Guid.NewGuid().ToString("N").Substring(0,8));
                 string liveRoot = Path.Combine(root, "live");
                 string webRoot = Path.Combine(liveRoot, @"AppData\Codex\web");
                 LifecycleFixture fixture = new LifecycleFixture();
@@ -833,7 +833,7 @@ namespace HarnessProfileSwitcher.Tests
                     Console.Error.WriteLine("Lifecycle fixture retained for diagnosis: " + Root);
                     return;
                 }
-                string archiveRoot = @"D:\fordeletion\HarnessProfileSwitcher-lifecycle-tests";
+                string archiveRoot = FixtureWorkspace.PathFor("Archive/lifecycle");
                 Directory.CreateDirectory(archiveRoot);
                 string destination = Path.Combine(archiveRoot, Path.GetFileName(Root));
                 Directory.Move(Root, destination);

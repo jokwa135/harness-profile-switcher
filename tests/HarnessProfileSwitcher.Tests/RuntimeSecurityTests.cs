@@ -11,7 +11,7 @@ namespace HarnessProfileSwitcher.Tests
     {
         public static int Run()
         {
-            string fixtureRoot = Path.Combine(@"D:\AI\Temp\HarnessProfileSwitcher\SecurityTests", Guid.NewGuid().ToString("N"));
+            string fixtureRoot = Path.Combine(FixtureWorkspace.PathFor("SecurityTests"), Guid.NewGuid().ToString("N"));
             bool succeeded = false;
             Directory.CreateDirectory(fixtureRoot);
             try
@@ -166,7 +166,7 @@ namespace HarnessProfileSwitcher.Tests
 
         private static void ArchiveFixture(string fixtureRoot)
         {
-            string archiveParent = @"D:\fordeletion\HarnessProfileSwitcher-security-tests";
+            string archiveParent = FixtureWorkspace.PathFor("Archive/security");
             Directory.CreateDirectory(archiveParent);
             string destination = Path.Combine(archiveParent, Path.GetFileName(fixtureRoot));
             Directory.Move(fixtureRoot, destination);
